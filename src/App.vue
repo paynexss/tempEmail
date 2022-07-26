@@ -34,7 +34,7 @@
             <el-button class="mgl-5" @click="newEmail" type="primary"
               >新邮箱</el-button
             >
-            <el-button @click="open">自定义</el-button>
+            <el-button @click="open">功能</el-button>
           </div>
           <div class="refresh">
             <!-- <div class="reverse">{{timer.rest}}s</div> -->
@@ -54,7 +54,7 @@
         </div>
       </el-header>
       <el-main>
-        <mainApp :name="name" ref="main"></mainApp>
+        <mainApp :name="name" ref="main" @getVerifyCode="getVerifyCode"></mainApp>
       </el-main>
     </el-container>
   </div>
@@ -63,7 +63,9 @@
 <script>
 import mainApp from './components/mainApp.vue'
 import handleClipboard from '@/utils/clipboard'
-
+import {verification_code,register,create,invitation} from '@/api/avn'
+import {getToken,setToken} from '@/utils/auth'
+import { message } from '@/utils/message'
 // import { createEmail, registerEmail } from '@/api'
 const TEMPKEY = 'tempName'
 export default {
@@ -77,6 +79,8 @@ export default {
       name: '',
       domain: '',
       emails: [],
+      code:'',
+      invitation_code:'',
       timer: {
         rest: 0,
         timer: null
@@ -143,6 +147,9 @@ export default {
       localStorage.setItem(TEMPKEY, JSON.stringify(arr))
       this.appendNewValue()
       this.name = data
+      if (this.invitation_code && this.invitation_code !== '') {
+        this.getVerificationCode()
+      }
     },
     combineEmail(data) {
       let arr = []
@@ -165,26 +172,76 @@ export default {
       return arr
     },
     open() {
-      this.$prompt('请输入邮箱', '提示', {
-        confirmButtonText: '确定',
+      this.$prompt('请输入邀请码', '提示', {
+        confirmButtonText: '搞起',
         cancelButtonText: '取消',
-        inputPlaceholder: '输入邮箱前半部分',
-        inputPattern: /[a-zA-Z0-9_]{1,20}/,
-        inputErrorMessage: '格式不正确'
+        inputPlaceholder: '输入邀请码'
+        // inputPattern: /[a-zA-Z0-9_]{1,20}/,
+        // inputErrorMessage: '格式不正确'
       })
         .then(({ value }) => {
           value = value.toString()
-          this.$ws.dispatchEvent('REGISTER', { userName: value })
+          this.invitation_code = value
+          this.getVerificationCode()
+          // this.loading()
+          /* this.$ws.dispatchEvent('REGISTER', { userName: value })
           this.name = value
           const arr = this.combineEmail(value)
           this.emails = arr
           localStorage.setItem(TEMPKEY, JSON.stringify(arr))
-          this.$ws.dispatchEvent('LIST_MAIL')
+          this.$ws.dispatchEvent('LIST_MAIL') */
         })
         .catch(e => {
           console.log(e)
         })
-    }
+    },
+    getVerificationCode(){
+      verification_code({account:this.name + this.domain}).then(res => {
+        // console.log(res)
+      }).catch(e => {
+        // console.log(e)
+      })
+    },
+    getVerifyCode(data){
+      if (this.code !== data.code) {
+        this.registerAccount(data.code);
+        this.code = data.code;
+      }
+    },
+    registerAccount(code){
+      register({
+        account: this.name + this.domain,
+        password: '123456',
+        verification_code: code,
+        platform: 'pwa'
+      }).then(res=>{
+        console.log(`register`,res)
+        if (res.msg === 'ok' && res.success) {
+          let token = res.token;
+          setToken(token);
+          //尝试不完善资料能否绑定邀请成功
+          // create()
+          invitation({ invitation_code: this.invitation_code}).then(res=>{
+            console.log(`invitation`,res)
+            if (res.msg === 'ok' && res.success) {
+              this.newEmail()
+
+            }
+          })
+        }
+      });
+    },
+    loading() {
+      const loading = this.$loading({
+        lock: true,
+        text: 'Loading',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+      /* setTimeout(() => {
+        loading.close();
+      }, 2000); */
+    },
   }
 }
 </script>

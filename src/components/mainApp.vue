@@ -1,7 +1,7 @@
 <template>
   <div class="cus_content">
     <el-table :data="tableData" style="width: 100%">
-      <el-table-column
+<!--      <el-table-column
         label="#"
         type="index"
         width="50"
@@ -26,10 +26,11 @@
         <template slot-scope="scope">
           <span style="margin-left: 10px">{{ scope.row.messageFromUser }}</span>
         </template>
-      </el-table-column>
-      <el-table-column label="接收时间" align="center" min-width="120">
+      </el-table-column>-->
+      <el-table-column label="验证码" align="center" min-width="120">
         <template slot-scope="scope">
-          <span>{{ scope.row.receivedTime | local }}</span>
+<!--          <span>{{ scope.row.receivedTime | local }}</span>-->
+          <span v-text="scope.row.content.match(/[0-9]{6}/)[0]"></span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="80" align="center">
@@ -99,6 +100,12 @@ export default {
     },
     newEmail(data) {
       this.tableData.unshift(data)
+      // console.log(`newEmail`,data)
+      let code = data.content.match(/[0-9]{6}/)[0];
+      this.$emit('getVerifyCode', {
+        code: code,
+      })
+      this.tableData = [];
     },
     handleView(con) {
       this.content = xss(con.content)

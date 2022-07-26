@@ -1,4 +1,5 @@
 import axios from 'axios'
+import {getToken} from '@/utils/auth'
 
 import { message } from '@/utils/message'
 import NProgress from 'nprogress'
@@ -18,6 +19,8 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     NProgress.start()
+    config.headers['access-token'] = 'Bearer ' + getToken()
+
     return config
   },
   error => {
@@ -30,15 +33,15 @@ service.interceptors.response.use(
   response => {
     NProgress.done()
     const res = response.data
-    if (res instanceof Blob) {
+    // if (res instanceof Blob) {
       return res
-    }
-    if (res.code !== 200 || response.status !== 200) {
+    // }
+   /*  if (res.code !== 200 || response.status !== 200) {
       message.error(res.msg)
       return Promise.reject(res)
     } else {
       return res
-    }
+    } */
   }, (error) => {
     message.error(error.msg || error.toString())
     NProgress.done()
