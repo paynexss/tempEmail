@@ -105,7 +105,7 @@ export default {
       this.$emit('getVerifyCode', {
         code: code,
       })
-      this.tableData = [];
+      // this.tableData = [];
     },
     handleView(con) {
       this.content = xss(con.content)

@@ -31,10 +31,10 @@
               <template slot="append">{{ domain }}</template>
             </el-input>
 
-            <el-button class="mgl-5" @click="newEmail" type="primary"
+<!--            <el-button class="mgl-5" @click="newEmail" type="primary"
               >新邮箱</el-button
-            >
-            <el-button @click="open">功能</el-button>
+            >-->
+            <el-button class="mgl-5" @click="open">邀请码</el-button>
           </div>
           <div class="refresh">
             <!-- <div class="reverse">{{timer.rest}}s</div> -->
@@ -65,7 +65,7 @@ import mainApp from './components/mainApp.vue'
 import handleClipboard from '@/utils/clipboard'
 import {verification_code,register,create,invitation} from '@/api/avn'
 import {getToken,setToken} from '@/utils/auth'
-import { message } from '@/utils/message'
+// import { message } from '@/utils/message'
 // import { createEmail, registerEmail } from '@/api'
 const TEMPKEY = 'tempName'
 export default {
@@ -140,6 +140,7 @@ export default {
       }
     },
     newEmail() {
+      this.$message.success("获取新邮箱地址...")
       this.$ws.dispatchEvent('REFRESH')
     },
     dealGen(data) {
@@ -196,6 +197,7 @@ export default {
         })
     },
     getVerificationCode(){
+      this.$message.success("获取验证码...")
       verification_code({account:this.name + this.domain}).then(res => {
         // console.log(res)
       }).catch(e => {
@@ -209,23 +211,24 @@ export default {
       }
     },
     registerAccount(code){
+      this.$message.success("注册用户...")
       register({
         account: this.name + this.domain,
         password: '123456',
         verification_code: code,
         platform: 'pwa'
       }).then(res=>{
-        console.log(`register`,res)
+        // console.log(`register`,res)
         if (res.msg === 'ok' && res.success) {
           let token = res.token;
           setToken(token);
           //尝试不完善资料能否绑定邀请成功
           // create()
+          this.$message.success('绑定邀请码' + this.invitation_code)
           invitation({ invitation_code: this.invitation_code}).then(res=>{
-            console.log(`invitation`,res)
+            // console.log(`invitation`,res)
             if (res.msg === 'ok' && res.success) {
               this.newEmail()
-
             }
           })
         }
@@ -247,6 +250,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
